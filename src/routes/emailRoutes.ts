@@ -22,7 +22,7 @@ router.get('/emails', async (req, res) => {
       query: {
         match_all: {},
       },
-      size: 1500,
+      size: 50,
     });
 
     const emails = hits.hits.map((hit: any) => ({
