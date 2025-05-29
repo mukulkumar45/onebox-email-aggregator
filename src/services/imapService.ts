@@ -1,7 +1,8 @@
 import { ImapFlow, ImapFlowOptions } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import dotenv from 'dotenv';
-import { indexEmail } from '../../src/indexEmail'; 
+import { indexEmail } from '../../src/indexEmail';
+import { categorizeEmail } from '../utils/emailCategorizer';
 
 dotenv.config();
 
@@ -37,7 +38,12 @@ async function startIdle(client: ImapFlow, accountUser: string) {
         if (latest) {
           const parsed = await simpleParser(latest.source as Buffer);
           console.log(`🆕 [${accountUser}] ${parsed.subject}`);
-          await indexEmail(accountUser, parsed); 
+
+          const subject = parsed.subject || '';
+          const body = parsed.text || '';
+          const category = await categorizeEmail(subject, body);
+
+          await indexEmail(accountUser, parsed, category);
         }
       } finally {
         lock.release();
@@ -67,7 +73,12 @@ export async function startIMAPSync() {
     for await (const msg of client.fetch({ since }, { uid: true, envelope: true, source: true })) {
       const parsed = await simpleParser(msg.source as Buffer);
       console.log(`📩 [${account.auth.user}] ${parsed.subject}`);
-      await indexEmail(account.auth.user, parsed); 
+
+      const subject = parsed.subject || '';
+      const body = parsed.text || '';
+      const category = await categorizeEmail(subject, body);
+
+      await indexEmail(account.auth.user, parsed, category);
     }
 
     console.log(`🔄 Starting real-time IDLE mode for ${account.auth.user}`);

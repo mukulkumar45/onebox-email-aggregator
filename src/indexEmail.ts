@@ -1,23 +1,40 @@
 import { ParsedMail } from 'mailparser';
-import { esClient } from './elasticsearchClient';
+import { Client } from '@elastic/elasticsearch';
+import dotenv from 'dotenv';
 
-export async function indexEmail(accountUser: string, mail: ParsedMail) {
+dotenv.config();
+
+const client = new Client({
+  cloud: {
+    id: process.env.ELASTIC_CLOUD_ID!,
+  },
+  auth: {
+    username: process.env.ELASTIC_USER!,
+    password: process.env.ELASTIC_PASS!,
+  },
+});
+
+export async function indexEmail(user: string, parsedEmail: ParsedMail, category?: string) {
+  const emailData = {
+    from: parsedEmail.from?.text || '',
+    subject: parsedEmail.subject || '',
+    date: parsedEmail.date || new Date().toISOString(),
+    text: parsedEmail.text || '',
+    html: parsedEmail.html || '',
+    user,
+    category: category || 'uncategorized', // Ensure default value
+    status: 'new',
+  };
+
+  console.log('Indexing email with category:', emailData.category); // Debug log
+
   try {
-    const result = await esClient.index({
-      index: 'emails', 
-      document: {
-        account: accountUser,
-        subject: mail.subject || '',
-        from: mail.from?.text || '',
-        date: mail.date || new Date(),
-        text: mail.text || '',
-        html: mail.html || '',
-        messageId: mail.messageId || '',
-      },
+    await client.index({
+      index: 'emails',
+      document: emailData,
     });
-
-    console.log(`📦 Indexed email from ${accountUser}: ${mail.subject}`);
+    console.log(`✅ Successfully indexed email with category: ${emailData.category}`);
   } catch (error) {
-    console.error('❌ Error indexing email:', error);
+    console.error('Error indexing email:', error);
   }
 }

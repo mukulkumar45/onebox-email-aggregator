@@ -23,11 +23,13 @@ router.get('/emails', async (req, res) => {
         match_all: {},
       },
       size: 50,
+      _source: ['from', 'subject', 'date', 'text', 'category'] // Explicitly include fields
     });
 
     const emails = hits.hits.map((hit: any) => ({
       id: hit._id,
       ...hit._source,
+      category: hit._source.category || 'uncategorized' // Ensure category exists
     }));
 
     res.json(emails);
