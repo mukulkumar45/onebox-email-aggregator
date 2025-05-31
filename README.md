@@ -10,6 +10,8 @@ A feature-rich email aggregator platform that connects multiple Gmail accounts, 
 -> Mark emails as "Interested"
 -> Slack notifications for interested emails
 -> Webhook integration for external systems
+-> AI classification for emails
+-> AI Suggested replies
 
 #Tech-Stack (Backend)
 - Node.js
@@ -18,6 +20,7 @@ A feature-rich email aggregator platform that connects multiple Gmail accounts, 
 - IMAPFlow (for email sync)
 - Elasticsearch (Cloud)
 - Axios
+- Hugging Face open API 
 
 #Articture Overview
 
@@ -57,13 +60,16 @@ Elasticsearch ←→ Express API
      SLACK_WEBHOOK_URL=https://hooks.slack.com/services/your/webhook
      WEBHOOK_URL=https://your-custom-webhook.com/notify
 
+     OPENAI_API_KEY=yuour open aoi key
+     HUGGINGFACE_API_KEY=your hugging face token
 
-3. Install Dependencies
+
+4. Install Dependencies
 
      cd backend
      npm install
 
-4. Running and testing the service
+5. Running and testing the service
    
      cd backend
      npm run dev
