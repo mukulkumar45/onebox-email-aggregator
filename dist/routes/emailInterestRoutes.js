@@ -3,12 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
+const express_1 = require("express");
 const elasticsearch_1 = require("@elastic/elasticsearch");
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const router = express_1.default.Router();
+const router = (0, express_1.Router)();
 const client = new elasticsearch_1.Client({
     cloud: {
         id: process.env.ELASTIC_CLOUD_ID,
@@ -34,7 +34,8 @@ router.put('/emails/:id/interest', async (req, res) => {
         });
         const email = emailDoc._source;
         if (!email) {
-            return res.status(404).json({ error: 'Email not found after update' });
+            res.status(404).json({ error: 'Email not found after update' });
+            return;
         }
         if (process.env.SLACK_WEBHOOK_URL) {
             await axios_1.default.post(process.env.SLACK_WEBHOOK_URL, {

@@ -22,7 +22,7 @@ export async function indexEmail(user: string, parsedEmail: ParsedMail, category
     text: parsedEmail.text || '',
     html: parsedEmail.html || '',
     user,
-    category: category || 'uncategorized', // Ensure default value
+    category: category || '', // Ensure default value
     status: 'new',
   };
 

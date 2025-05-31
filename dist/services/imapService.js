@@ -8,6 +8,7 @@ const imapflow_1 = require("imapflow");
 const mailparser_1 = require("mailparser");
 const dotenv_1 = __importDefault(require("dotenv"));
 const indexEmail_1 = require("../../src/indexEmail");
+const emailCategorizer_1 = require("../utils/emailCategorizer");
 dotenv_1.default.config();
 const imapAccounts = [
     {
@@ -39,7 +40,10 @@ async function startIdle(client, accountUser) {
                 if (latest) {
                     const parsed = await (0, mailparser_1.simpleParser)(latest.source);
                     console.log(`🆕 [${accountUser}] ${parsed.subject}`);
-                    await (0, indexEmail_1.indexEmail)(accountUser, parsed);
+                    const subject = parsed.subject || '';
+                    const body = parsed.text || '';
+                    const category = await (0, emailCategorizer_1.categorizeEmail)(subject, body);
+                    await (0, indexEmail_1.indexEmail)(accountUser, parsed, category);
                 }
             }
             finally {
@@ -65,7 +69,10 @@ async function startIMAPSync() {
         for await (const msg of client.fetch({ since }, { uid: true, envelope: true, source: true })) {
             const parsed = await (0, mailparser_1.simpleParser)(msg.source);
             console.log(`📩 [${account.auth.user}] ${parsed.subject}`);
-            await (0, indexEmail_1.indexEmail)(account.auth.user, parsed);
+            const subject = parsed.subject || '';
+            const body = parsed.text || '';
+            const category = await (0, emailCategorizer_1.categorizeEmail)(subject, body);
+            await (0, indexEmail_1.indexEmail)(account.auth.user, parsed, category);
         }
         console.log(`🔄 Starting real-time IDLE mode for ${account.auth.user}`);
         startIdle(client, account.auth.user);

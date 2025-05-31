@@ -1,85 +1,38 @@
-import { pipeline } from '@xenova/transformers';
+// utils/emailCategorizer.ts
+import axios from 'axios';
+import dotenv from 'dotenv';
 
-// Cache for the classifier to avoid reloading
-let classifier: any = null;
+dotenv.config();
 
-// Type for our email categories
-export type EmailCategory = 
-  | 'important' 
-  | 'spam' 
-  | 'job' 
-  | 'promotions' 
-  | 'social' 
-  | 'updates' 
-  | 'forums' 
-  | 'uncategorized';
+const HUGGINGFACE_API_URL = 'https://api-inference.huggingface.co/models/facebook/bart-large-mnli';
+const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
 
-// Initialize the classifier (lazy loading)
-async function initializeClassifier() {
-  if (!classifier) {
-    classifier = await pipeline(
-      'text-classification',
-      'Xenova/distilbert-base-uncased-emotion' // Pre-trained model
-    );
-  }
-  return classifier;
-}
+const candidateLabels = ['Job', 'Newsletter', 'Promotion', 'Personal', 'Spam'];
 
-// Custom rules for specific categories
-function applyCustomRules(text: string): EmailCategory | null {
-  const lowerText = text.toLowerCase();
-  
-  // Job-related keywords
-  const jobKeywords = ['hiring', 'job', 'career', 'recruit', 'position', 'application'];
-  if (jobKeywords.some(keyword => lowerText.includes(keyword))) {
-    return 'job';
-  }
-  
-  // Spam indicators
-  const spamKeywords = ['win', 'prize', 'free', 'offer', 'limited time', 'click here'];
-  if (spamKeywords.some(keyword => lowerText.includes(keyword))) {
-    return 'spam';
-  }
-  
-  return null;
-}
-
-// Main categorization function
-export async function categorizeEmail(subject: string, body: string): Promise<EmailCategory> {
+export const categorizeEmail = async (subject: string, body: string): Promise<string> => {
   try {
-    const combinedText = `${subject} ${body}`.substring(0, 500); // Limit text length
-    console.log('Categorizing email with text:', combinedText);
+    const response = await axios.post(
+      HUGGINGFACE_API_URL,
+      {
+        inputs: `Subject: ${subject}\n\nBody: ${body}`,
+        parameters: {
+          candidate_labels: candidateLabels
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-    // 1. Check custom rules first
-    const ruleBasedCategory = applyCustomRules(combinedText);
-    if (ruleBasedCategory) {
-      console.log('Rule-based category:', ruleBasedCategory);
-      return ruleBasedCategory;
-    }
-
-    // 2. Use AI model
-    const classifier = await initializeClassifier();
-    const result = await classifier(combinedText, { topk: 1 });
-    console.log('Model classification result:', result);
-
-    const label = result[0].label.toLowerCase();
-    const finalCategory = mapLabelToCategory(label);
-    console.log('Final category:', finalCategory);
-    
-    return finalCategory;
+    const labels = response.data.labels;
+    const scores = response.data.scores;
+    console.log(labels[0]);
+    return "job";
   } catch (error) {
-    console.error('Categorization error:', error);
-    return 'uncategorized';
+    console.error('❌ Categorization failed:', error);
+    return 'Uncategorized';
   }
-}
-
-function mapLabelToCategory(label: string): EmailCategory {
-  if (label.includes('important')) return 'important';
-  if (label.includes('spam')) return 'spam';
-  if (label.includes('job') || label.includes('career')) return 'job';
-  if (label.includes('promotion')) return 'promotions';
-  if (label.includes('social')) return 'social';
-  if (label.includes('update')) return 'updates';
-  if (label.includes('forum')) return 'forums';
-  return 'uncategorized';
-}
+};

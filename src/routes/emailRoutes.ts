@@ -1,6 +1,7 @@
 import express from 'express';
 import { Client } from '@elastic/elasticsearch';
 import dotenv from 'dotenv';
+import { categorizeEmail } from '../utils/emailCategorizer';
 
 const router = express.Router();
 dotenv.config();
