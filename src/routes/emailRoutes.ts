@@ -1,7 +1,6 @@
 import express from 'express';
 import { Client } from '@elastic/elasticsearch';
 import dotenv from 'dotenv';
-import { categorizeEmail } from '../utils/emailCategorizer';
 import axios from 'axios';
 
 const router = express.Router();
@@ -31,7 +30,7 @@ router.get('/emails', async (req, res) => {
     const emails = hits.hits.map((hit: any) => ({
       id: hit._id,
       ...hit._source,
-      category: hit._source.category || 'uncategorized' 
+      category: hit._source.category
     }));
 
     res.json(emails);

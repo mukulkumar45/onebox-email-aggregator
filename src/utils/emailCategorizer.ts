@@ -1,4 +1,3 @@
-// utils/emailCategorizer.ts
 import axios from 'axios';
 import dotenv from 'dotenv';
 
@@ -28,9 +27,8 @@ export const categorizeEmail = async (subject: string, body: string): Promise<st
     );
 
     const labels = response.data.labels;
-    const scores = response.data.scores;
     console.log(labels[0]);
-    return "job";
+    return labels[0];
   } catch (error) {
     console.error('❌ Categorization failed:', error);
     return 'Uncategorized';

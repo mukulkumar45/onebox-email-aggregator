@@ -72,7 +72,6 @@ export async function startIMAPSync() {
 
     for await (const msg of client.fetch({ since }, { uid: true, envelope: true, source: true })) {
       const parsed = await simpleParser(msg.source as Buffer);
-      console.log(`📩 [${account.auth.user}] ${parsed.subject}`);
 
       const subject = parsed.subject || '';
       const body = parsed.text || '';
@@ -81,7 +80,6 @@ export async function startIMAPSync() {
       await indexEmail(account.auth.user, parsed, category);
     }
 
-    console.log(`🔄 Starting real-time IDLE mode for ${account.auth.user}`);
     startIdle(client, account.auth.user);
   }
 }

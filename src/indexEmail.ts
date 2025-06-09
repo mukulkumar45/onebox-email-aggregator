@@ -22,11 +22,10 @@ export async function indexEmail(user: string, parsedEmail: ParsedMail, category
     text: parsedEmail.text || '',
     html: parsedEmail.html || '',
     user,
-    category: category || '', // Ensure default value
+    category: category || '', 
     status: 'new',
   };
 
-  console.log('Indexing email with category:', emailData.category); // Debug log
 
   try {
     await client.index({
